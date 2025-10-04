@@ -20,6 +20,7 @@ pipeline {
                     url: 'https://github.com/minmax99/myjenkinspipeline.git',
                     credentialsId: '' //'github-credentials-id'   // Jenkins credential ID for GitHub
                 )
+                echo "YO! Checkout from GitHub done!"
             }
         }
 
@@ -35,12 +36,15 @@ pipeline {
                         -e -o "%REPORT_DIR%"
                     """
                 }
+                echo "YO! JMeter test execution done!"
             }
         }
 
         stage('Publish JMeter Report') {
             steps {
                 // 📊 Publish HTML dashboard in Jenkins
+
+                echo "YO! Now publishing test report.."
                 publishHTML([[
                     reportName : 'JMeter Test Report',
                     reportDir  : "${env.REPORT_DIR}",
