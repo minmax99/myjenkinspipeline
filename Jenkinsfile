@@ -1,19 +1,38 @@
 pipeline {
-    agent any
+    agent any 
+    
 
     environment {
-        JMETER_HOME = "C:\\apache-jmeter-5.6.3"   // adjust to your JMeter path
-        TEST_PLAN  = "D:\\Workspace\\JMeter\\HR_ThreadGroup.jmx"
-        RESULT_JTL = "D:\\Workspace\\JMeter\\2\\results.jtl"
-        REPORT_DIR = "D:\\Workspace\\JMeter\\2"
+        // 🔧 Update paths as per your Jenkins agent setup
+        JMETER_HOME = "C:\\apache-jmeter-5.6.3"
+        TEST_PLAN   = "HR_ThreadGroup.jmx"       // path inside your GitHub repo
+        RESULT_JTL  = "D:\\Workspace\\JMeter\\2\\results.jtl"
+        REPORT_DIR  = "D:\\Workspace\\JMeter\\2\\report"
     }
 
     stages {
+        stage('Checkout from GitHub') {
+            steps {
+                // 🧩 Pull your JMeter test plan from GitHub
+                // Replace URL and credentialsId with your values
+                git(
+                    branch: 'main',
+                    url: 'https://github.com/minmax99/myjenkinspipeline.git',
+                    credentialsId: '' //'github-credentials-id'   // Jenkins credential ID for GitHub
+                )
+            }
+        }
+
         stage('Run JMeter Test') {
             steps {
                 script {
+
+                    // 🧪 Execute JMeter in non-GUI mode
                     bat """
-                        "%JMETER_HOME%\\bin\\jmeter.bat" -n -t "%TEST_PLAN%" -l "%RESULT_JTL%" -e -o "%REPORT_DIR%"
+                        "%JMETER_HOME%\\bin\\jmeter.bat" ^
+                        -n -t "%WORKSPACE%\\${TEST_PLAN}" ^
+                        -l "%RESULT_JTL%" ^
+                        -e -o "%REPORT_DIR%"
                     """
                 }
             }
@@ -21,13 +40,14 @@ pipeline {
 
         stage('Publish JMeter Report') {
             steps {
+                // 📊 Publish HTML dashboard in Jenkins
                 publishHTML([[
-                    reportName : 'JMeter Report',
+                    reportName : 'JMeter Test Report',
                     reportDir  : "${env.REPORT_DIR}",
                     reportFiles: 'index.html',
                     keepAll    : true,
                     alwaysLinkToLastBuild: true,
-                    allowMissing: true
+                    allowMissing: false
                 ]])
             }
         }
@@ -35,7 +55,11 @@ pipeline {
 
     post {
         always {
-            archiveArtifacts artifacts: '**/*.jtl, **/*.log', allowEmptyArchive: true
+            echo "Archiving JMeter test results..."
+            archiveArtifacts artifacts: 'results/**/*.jtl', allowEmptyArchive: true
+        }
+        failure {
+            echo "❌ JMeter tests failed. Please review the logs and HTML report."
         }
     }
 }
