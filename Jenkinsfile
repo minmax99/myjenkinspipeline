@@ -45,14 +45,14 @@ pipeline {
                 // 📊 Publish HTML dashboard in Jenkins
 
                 echo "YO! Now publishing test report.."
-                publishHTML([[
+                publishHTML(target:[
                     reportName : 'JMeter Test Report',
                     reportDir  : "${env.REPORT_DIR}",
                     reportFiles: 'index.html',
                     keepAll    : true,
                     alwaysLinkToLastBuild: true,
                     allowMissing: false
-                ]])
+                ])
             }
         }
     }
